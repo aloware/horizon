@@ -13,6 +13,13 @@ use Laravel\Horizon\Contracts\Silenced;
 class JobPayload implements ArrayAccess
 {
     /**
+     * The job object.
+     *
+     * @var object
+     */
+    public $job;
+
+    /**
      * The raw payload string.
      *
      * @var string
@@ -37,6 +44,8 @@ class JobPayload implements ArrayAccess
         $this->value = $value;
 
         $this->decoded = json_decode($value, true);
+
+        $this->job = unserialize($this->command());
     }
 
     /**
@@ -46,7 +55,16 @@ class JobPayload implements ArrayAccess
      */
     public function id()
     {
-        return $this->decoded['uuid'] ?? $this->decoded['id'];
+        $job_id = $this->decoded['uuid'] ?? $this->decoded['id'];
+
+        $fair_signal_prefix = config('fair-queue.signal_key_prefix_for_horizon');
+
+        if( $fair_signal_prefix && $this->job && $this->isFairSignal($this->job)) {
+            $queue = $this->job->queue;
+            $partition = $this->job->partition;
+            return "{$fair_signal_prefix}{$queue}:{$partition}:$job_id";
+        }
+        return $job_id;
     }
 
     /**
@@ -57,6 +75,16 @@ class JobPayload implements ArrayAccess
     public function tags()
     {
         return Arr::get($this->decoded, 'tags', []);
+    }
+
+    /**
+     * Check the job type is fair-signal.
+     *
+     * @return boolean
+     */
+    public function isFairSignal()
+    {
+        return $this->job instanceof \Aloware\FairQueue\FairSignalJob;
     }
 
     /**
@@ -206,6 +234,16 @@ class JobPayload implements ArrayAccess
     public function commandName()
     {
         return Arr::get($this->decoded, 'data.commandName');
+    }
+
+    /**
+     * Get the "command" for the job.
+     *
+     * @return string
+     */
+    public function command()
+    {
+        return Arr::get($this->decoded, 'data.command');
     }
 
     /**
