@@ -152,6 +152,13 @@ class SupervisorOptions
     public $rest;
 
     /**
+     * Enviroment variables defined per worker.
+     *
+     * @var null
+     */
+    public $environment = null;
+
+    /**
      * Create a new worker options instance.
      *
      * @param  string  $name
@@ -309,6 +316,7 @@ class SupervisorOptions
             'balanceMaxShift' => $this->balanceMaxShift,
             'parentId' => $this->parentId,
             'rest' => $this->rest,
+            'environment' => $this->environment,
         ];
     }
 
