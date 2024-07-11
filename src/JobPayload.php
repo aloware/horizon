@@ -45,7 +45,11 @@ class JobPayload implements ArrayAccess
 
         $this->decoded = json_decode($value, true);
 
-        $this->job = unserialize($this->command());
+        $command = $this->command();
+
+        if (!empty($command)) {
+            $this->job = unserialize($this->command());
+        }
     }
 
     /**
@@ -84,7 +88,8 @@ class JobPayload implements ArrayAccess
      */
     public function isFairSignal()
     {
-        return $this->job instanceof \Aloware\FairQueue\FairSignalJob;
+        return class_exists('\Aloware\FairQueue\FairSignalJob')
+            && $this->job instanceof \Aloware\FairQueue\FairSignalJob;
     }
 
     /**
