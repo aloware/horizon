@@ -48,7 +48,7 @@ class JobPayload implements ArrayAccess
         $command = $this->command();
 
         if (!empty($command)) {
-            $this->job = unserialize($this->command());
+            $this->job = unserialize($command);
         }
     }
 
