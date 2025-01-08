@@ -1,6 +1,64 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/horizon/compare/v5.25.0...5.x)
+## [Unreleased](https://github.com/laravel/horizon/compare/v5.30.1...5.x)
+
+## [v5.30.1](https://github.com/laravel/horizon/compare/v5.30.0...v5.30.1) - 2024-12-13
+
+* fix predis `clear()` when using redis 7.4 by [@vintagesucks](https://github.com/vintagesucks) in https://github.com/laravel/horizon/pull/1522
+
+## [v5.30.0](https://github.com/laravel/horizon/compare/v5.29.4...v5.30.0) - 2024-12-06
+
+* Add support for notification class overrides by [@lukemorcom](https://github.com/lukemorcom) in https://github.com/laravel/horizon/pull/1518
+* Replace implicitly nullable parameters for PHP 8.4 by [@txdFabio](https://github.com/txdFabio) in https://github.com/laravel/horizon/pull/1520
+
+## [v5.29.4](https://github.com/laravel/horizon/compare/v5.29.3...v5.29.4) - 2024-11-21
+
+* Allow to specify connection in ClearCommand by [@antennaio](https://github.com/antennaio) in https://github.com/laravel/horizon/pull/1516
+* [5.x] Supports PHP 8.4 by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/horizon/pull/1507
+
+## [v5.29.3](https://github.com/laravel/horizon/compare/v5.29.2...v5.29.3) - 2024-11-07
+
+* Test Improvements by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/horizon/pull/1511
+* Remove the verbiage to publish assets in the upgrade guide by [@wsamoht](https://github.com/wsamoht) in https://github.com/laravel/horizon/pull/1515
+
+## [v5.29.2](https://github.com/laravel/horizon/compare/v5.29.1...v5.29.2) - 2024-10-16
+
+* [5.x] Use `#[\Override]` PHP Attribute to detect breaking changes by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/horizon/pull/1506
+* Improvement: Wont spawn extra queues by [@alexmontoanelli](https://github.com/alexmontoanelli) in https://github.com/laravel/horizon/pull/1508
+
+## [v5.29.1](https://github.com/laravel/horizon/compare/v5.29.0...v5.29.1) - 2024-10-08
+
+* Update logo to support dark/light theme by [@milewski](https://github.com/milewski) in https://github.com/laravel/horizon/pull/1500
+* Fix pop() method signature laravel/framework#53063 by [@it-can](https://github.com/it-can) in https://github.com/laravel/horizon/pull/1504
+
+## [v5.29.0](https://github.com/laravel/horizon/compare/v5.28.1...v5.29.0) - 2024-09-24
+
+* [5.x] Upgrade from Vue 2 to Vue 3 by [@osbre](https://github.com/osbre) in https://github.com/laravel/horizon/pull/1496
+* Refresh the logo by [@osbre](https://github.com/osbre) in https://github.com/laravel/horizon/pull/1497
+* Bump vite from 5.2.10 to 5.4.6 by [@dependabot](https://github.com/dependabot) in https://github.com/laravel/horizon/pull/1498
+* Bump rollup from 4.21.3 to 4.22.4 by [@dependabot](https://github.com/dependabot) in https://github.com/laravel/horizon/pull/1499
+
+## [v5.28.1](https://github.com/laravel/horizon/compare/v5.28.0...v5.28.1) - 2024-09-04
+
+* [5.x] Reanimate asset compilation by [@daniser](https://github.com/daniser) in https://github.com/laravel/horizon/pull/1495
+
+## [v5.28.0](https://github.com/laravel/horizon/compare/v5.27.1...v5.28.0) - 2024-09-03
+
+* Create status command for individual supervisors by [@mfrieswyk](https://github.com/mfrieswyk) in https://github.com/laravel/horizon/pull/1467
+* [5.x] Use `match` expression by [@xurshudyan](https://github.com/xurshudyan) in https://github.com/laravel/horizon/pull/1487
+* FIX #1488 : Focused line gets hightlighted [remove .vjs-tree-node:hover] by [@srennou](https://github.com/srennou) in https://github.com/laravel/horizon/pull/1492
+
+## [v5.27.1](https://github.com/laravel/horizon/compare/v5.27.0...v5.27.1) - 2024-08-05
+
+* Fix error when loading monitoried tags page(#1478) by [@therobfonz](https://github.com/therobfonz) in https://github.com/laravel/horizon/pull/1485
+
+## [v5.27.0](https://github.com/laravel/horizon/compare/v5.26.0...v5.27.0) - 2024-07-26
+
+* Extend Slack Notification to work with Slack Apps for Laravel 11 support by [@travisricks](https://github.com/travisricks) in https://github.com/laravel/horizon/pull/1481
+
+## [v5.26.0](https://github.com/laravel/horizon/compare/v5.25.0...v5.26.0) - 2024-07-22
+
+* [5.x] Adding scaling to balance = false by [@dbpolito](https://github.com/dbpolito) in https://github.com/laravel/horizon/pull/1473
 
 ## [v5.25.0](https://github.com/laravel/horizon/compare/v5.24.6...v5.25.0) - 2024-07-05
 
