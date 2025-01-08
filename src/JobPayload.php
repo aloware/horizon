@@ -90,9 +90,11 @@ class JobPayload implements ArrayAccess
             if ($job) {
                 $queue = $job->queue;
                 $partition = $job->partition;
+
                 return "{$fair_signal_prefix}{$queue}:{$partition}:$job_id";
             }
         }
+
         return $job_id;
     }
 
