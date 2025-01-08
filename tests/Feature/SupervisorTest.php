@@ -49,6 +49,7 @@ class SupervisorTest extends IntegrationTest
         parent::tearDown();
     }
 
+    /** @requires extension redis */
     public function test_supervisor_can_start_worker_process_with_given_options()
     {
         Queue::push(new Jobs\BasicJob);
@@ -91,6 +92,28 @@ class SupervisorTest extends IntegrationTest
 
         $this->assertSame(
             'exec '.$this->phpBinary.' worker.php redis --name=default --supervisor='.$host.':name --backoff=0 --max-time=0 --max-jobs=0 --memory=128 --queue="second" --sleep=3 --timeout=60 --tries=0 --rest=0',
+            $supervisor->processes()[1]->getCommandLine()
+        );
+    }
+
+    public function test_supervisor_starts_pools_with_queues_when_balancing_is_off()
+    {
+        $options = $this->supervisorOptions();
+        $options->queue = 'first,second';
+        $this->supervisor = $supervisor = new Supervisor($options);
+
+        $supervisor->scale(2);
+        $this->assertCount(2, $supervisor->processes());
+
+        $host = MasterSupervisor::name();
+
+        $this->assertSame(
+            'exec '.$this->phpBinary.' worker.php redis --name=default --supervisor='.$host.':name --backoff=0 --max-time=0 --max-jobs=0 --memory=128 --queue="first,second" --sleep=3 --timeout=60 --tries=0 --rest=0',
+            $supervisor->processes()[0]->getCommandLine()
+        );
+
+        $this->assertSame(
+            'exec '.$this->phpBinary.' worker.php redis --name=default --supervisor='.$host.':name --backoff=0 --max-time=0 --max-jobs=0 --memory=128 --queue="first,second" --sleep=3 --timeout=60 --tries=0 --rest=0',
             $supervisor->processes()[1]->getCommandLine()
         );
     }
@@ -154,6 +177,7 @@ class SupervisorTest extends IntegrationTest
     public function test_supervisor_information_is_persisted()
     {
         $this->supervisor = $supervisor = new Supervisor($options = $this->supervisorOptions());
+        $options->balance = 'simple';
         $options->queue = 'default,another';
 
         $supervisor->scale(2);
@@ -184,7 +208,8 @@ class SupervisorTest extends IntegrationTest
 
     public function test_processes_can_be_scaled_up()
     {
-        $this->supervisor = $supervisor = new Supervisor($this->supervisorOptions());
+        $this->supervisor = $supervisor = new Supervisor($options = $this->supervisorOptions());
+        $options->balance = 'simple';
 
         $supervisor->scale(2);
         $supervisor->loop();
@@ -198,6 +223,7 @@ class SupervisorTest extends IntegrationTest
     public function test_processes_can_be_scaled_down()
     {
         $this->supervisor = $supervisor = new Supervisor($options = $this->supervisorOptions());
+        $options->balance = 'simple';
         $options->sleep = 0;
 
         $supervisor->scale(3);
@@ -235,6 +261,7 @@ class SupervisorTest extends IntegrationTest
         $this->assertNotEquals($pid, $supervisor->processes()[0]->getPid());
     }
 
+    /** @requires extension redis */
     public function test_processes_can_be_paused_and_continued()
     {
         $options = $this->supervisorOptions();
@@ -468,6 +495,7 @@ class SupervisorTest extends IntegrationTest
     {
         SystemProcessCounter::$command = 'worker.php';
         $this->supervisor = $supervisor = new Supervisor($options = $this->supervisorOptions());
+        $options->balance = 'simple';
 
         $supervisor->scale(3);
         $supervisor->loop();
@@ -481,6 +509,7 @@ class SupervisorTest extends IntegrationTest
     {
         SystemProcessCounter::$command = 'worker.php';
         $this->supervisor = $supervisor = new Supervisor($options = $this->supervisorOptions());
+        $options->balance = 'simple';
 
         $supervisor->scale(3);
 

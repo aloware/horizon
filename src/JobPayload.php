@@ -44,12 +44,33 @@ class JobPayload implements ArrayAccess
         $this->value = $value;
 
         $this->decoded = json_decode($value, true);
+    }
 
-        $command = $this->command();
+    /**
+     * @return false|\Aloware\FairQueue\FairSignalJob
+     */
+    protected function getFairJob()
+    {
+        if (is_null($this->job)) {
+            $this->job = false;
 
-        if (!empty($command)) {
-            $this->job = unserialize($command);
+            if (!class_exists('\Aloware\FairQueue\FairSignalJob')) {
+                return $this->job;
+            }
+
+            $command = Arr::get($this->decoded, 'data.command', '');
+
+            // Regular expression to extract the class name from the serialized string
+            if (preg_match('/O:\d+:"([^"]+)"/', $command, $matches)) {
+                $className = $matches[1];
+
+                if ($className === \Aloware\FairQueue\FairSignalJob::class || is_subclass_of($className, \Aloware\FairQueue\FairSignalJob::class)) {
+                    $this->job = unserialize($command);
+                }
+            }
         }
+
+        return $this->job;
     }
 
     /**
@@ -63,11 +84,17 @@ class JobPayload implements ArrayAccess
 
         $fair_signal_prefix = config('fair-queue.signal_key_prefix_for_horizon');
 
-        if( $fair_signal_prefix && $this->job && $this->isFairSignal($this->job)) {
-            $queue = $this->job->queue;
-            $partition = $this->job->partition;
-            return "{$fair_signal_prefix}{$queue}:{$partition}:$job_id";
+        if ($fair_signal_prefix) {
+            $job = $this->getFairJob();
+
+            if ($job) {
+                $queue = $job->queue;
+                $partition = $job->partition;
+
+                return "{$fair_signal_prefix}{$queue}:{$partition}:$job_id";
+            }
         }
+
         return $job_id;
     }
 
@@ -79,17 +106,6 @@ class JobPayload implements ArrayAccess
     public function tags()
     {
         return Arr::get($this->decoded, 'tags', []);
-    }
-
-    /**
-     * Check the job type is fair-signal.
-     *
-     * @return boolean
-     */
-    public function isFairSignal()
-    {
-        return class_exists('\Aloware\FairQueue\FairSignalJob')
-            && $this->job instanceof \Aloware\FairQueue\FairSignalJob;
     }
 
     /**
@@ -146,18 +162,13 @@ class JobPayload implements ArrayAccess
      */
     protected function determineType($job)
     {
-        switch (true) {
-            case $job instanceof BroadcastEvent:
-                return 'broadcast';
-            case $job instanceof CallQueuedListener:
-                return 'event';
-            case $job instanceof SendQueuedMailable:
-                return 'mail';
-            case $job instanceof SendQueuedNotifications:
-                return 'notification';
-            default:
-                return 'job';
-        }
+        return match (true) {
+            $job instanceof BroadcastEvent => 'broadcast',
+            $job instanceof CallQueuedListener => 'event',
+            $job instanceof SendQueuedMailable => 'mail',
+            $job instanceof SendQueuedNotifications => 'notification',
+            default => 'job',
+        };
     }
 
     /**
@@ -202,18 +213,13 @@ class JobPayload implements ArrayAccess
      */
     protected function underlyingJob($job)
     {
-        switch (true) {
-            case $job instanceof BroadcastEvent:
-                return $job->event;
-            case $job instanceof CallQueuedListener:
-                return $job->class;
-            case $job instanceof SendQueuedMailable:
-                return $job->mailable;
-            case $job instanceof SendQueuedNotifications:
-                return $job->notification;
-            default:
-                return $job;
-        }
+        return match (true) {
+            $job instanceof BroadcastEvent => $job->event,
+            $job instanceof CallQueuedListener => $job->class,
+            $job instanceof SendQueuedMailable => $job->mailable,
+            $job instanceof SendQueuedNotifications => $job->notification,
+            default => $job,
+        };
     }
 
     /**
@@ -239,16 +245,6 @@ class JobPayload implements ArrayAccess
     public function commandName()
     {
         return Arr::get($this->decoded, 'data.commandName');
-    }
-
-    /**
-     * Get the "command" for the job.
-     *
-     * @return string
-     */
-    public function command()
-    {
-        return Arr::get($this->decoded, 'data.command');
     }
 
     /**

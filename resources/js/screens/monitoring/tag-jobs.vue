@@ -40,9 +40,9 @@
 
 
         /**
-         * Clean after the component is destroyed.
+         * Clean after the component is unmounted.
          */
-        destroyed() {
+        unmounted() {
             clearInterval(this.interval);
         },
 
@@ -70,7 +70,7 @@
 
                 tag = this.type == 'failed' ? 'failed:' + tag : tag;
 
-                this.$http.get(Horizon.basePath + '/api/monitoring/' + encodeURIComponent(tag) + '?starting_at=' + starting + '&limit=' + this.perPage)
+                this.$http.get(Horizon.basePath + '/api/monitoring/' + encodeURIComponent(tag) + '?starting_at=' + starting + '&limit=' + this.perPage + '&tag=' + encodeURIComponent(tag))
                     .then(response => {
                         if (!this.$root.autoLoadsNewEntries && refreshing && this.jobs.length && response.data.jobs[0]?.id !== this.jobs[0]?.id) {
                             this.hasNewEntries = true;
@@ -176,8 +176,8 @@
                 </td>
             </tr>
 
-            <tr v-for="job in jobs" :key="job.id" :job="job" is="job-row">
-            </tr>
+            <component v-for="job in jobs" :key="job.id" :job="job" is="job-row">
+            </component>
             </tbody>
         </table>
 
