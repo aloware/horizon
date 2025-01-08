@@ -64,11 +64,7 @@ class JobPayload implements ArrayAccess
             if (preg_match('/O:\d+:"([^"]+)"/', $command, $matches)) {
                 $className = $matches[1];
 
-                // 4 min 15 sec
-
                 if ($className === \Aloware\FairQueue\FairSignalJob::class || is_subclass_of($className, \Aloware\FairQueue\FairSignalJob::class)) {
-
-                    dump($className);
                     $this->job = unserialize($command);
                 }
             }
