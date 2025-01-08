@@ -84,7 +84,7 @@ class JobPayload implements ArrayAccess
 
         $fair_signal_prefix = config('fair-queue.signal_key_prefix_for_horizon');
 
-        if( $fair_signal_prefix) {
+        if ($fair_signal_prefix) {
             $job = $this->getFairJob();
 
             if ($job) {
