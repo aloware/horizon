@@ -1,6 +1,24 @@
 # Release Notes
 
-## [Unreleased](https://github.com/laravel/horizon/compare/v5.30.1...5.x)
+## [Unreleased](https://github.com/laravel/horizon/compare/v5.31.1...5.x)
+
+## [v5.31.1](https://github.com/laravel/horizon/compare/v5.31.0...v5.31.1) - 2025-03-16
+
+* [5.x] Specify `WorkloadRepository@get()` return type by [@cosmastech](https://github.com/cosmastech) in https://github.com/laravel/horizon/pull/1542
+
+## [v5.31.0](https://github.com/laravel/horizon/compare/v5.30.3...v5.31.0) - 2025-03-04
+
+* Scale workers from min instead of max on startup by [@andre-hoffmann](https://github.com/andre-hoffmann) in https://github.com/laravel/horizon/pull/1537
+* Add `proxy_path` config for subfolder usage in Horizon's Vue front-end by [@andre-hoffmann](https://github.com/andre-hoffmann) in https://github.com/laravel/horizon/pull/1538
+
+## [v5.30.3](https://github.com/laravel/horizon/compare/v5.30.2...v5.30.3) - 2025-02-11
+
+* Supports Laravel 12 by [@crynobone](https://github.com/crynobone) in https://github.com/laravel/horizon/pull/1532
+* Bump vite from 5.4.6 to 5.4.14 by [@dependabot](https://github.com/dependabot) in https://github.com/laravel/horizon/pull/1533
+
+## [v5.30.2](https://github.com/laravel/horizon/compare/v5.30.1...v5.30.2) - 2025-01-13
+
+* fix: cluster redis eval return false by [@seth-shi](https://github.com/seth-shi) in https://github.com/laravel/horizon/pull/1526
 
 ## [v5.30.1](https://github.com/laravel/horizon/compare/v5.30.0...v5.30.1) - 2024-12-13
 
