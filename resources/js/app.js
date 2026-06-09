@@ -7,6 +7,9 @@ import Base from './base';
 import Routes from './routes';
 import Alert from './components/Alert.vue';
 import SchemeToggler from './components/SchemeToggler.vue';
+import Poll from './components/Poll.vue';
+
+const LOCALSTORAGE_AUTOLOAD_KEY = 'horizonAutoLoadsNewEntries';
 
 let token = document.head.querySelector("meta[name='csrf-token']");
 
@@ -26,7 +29,7 @@ const app = createApp({
                 confirmationProceed: null,
                 confirmationCancel: null,
             },
-            autoLoadsNewEntries: localStorage.autoLoadsNewEntries === '1',
+            autoLoadsNewEntries: localStorage[LOCALSTORAGE_AUTOLOAD_KEY] === '1',
         };
     },
 });
@@ -53,6 +56,7 @@ app.use(router);
 app.component('vue-json-pretty', VueJsonPretty);
 app.component('alert', Alert);
 app.component('scheme-toggler', SchemeToggler);
+app.component('poll', Poll);
 
 app.mixin(Base);
 

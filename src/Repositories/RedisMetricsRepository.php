@@ -9,6 +9,7 @@ use Laravel\Horizon\Contracts\MetricsRepository;
 use Laravel\Horizon\Lock;
 use Laravel\Horizon\LuaScripts;
 use Laravel\Horizon\WaitTimeCalculator;
+use Throwable;
 
 class RedisMetricsRepository implements MetricsRepository
 {
@@ -39,9 +40,11 @@ class RedisMetricsRepository implements MetricsRepository
     {
         $classes = (array) $this->connection()->smembers('measured_jobs');
 
-        return collect($classes)->map(function ($class) {
-            return preg_match('/job:(.*)$/', $class, $matches) ? $matches[1] : $class;
-        })->sort()->values()->all();
+        return collect($classes)
+            ->map(fn ($class) => preg_match('/job:(.*)$/', $class, $matches) ? $matches[1] : $class)
+            ->sort()
+            ->values()
+            ->all();
     }
 
     /**
@@ -53,9 +56,11 @@ class RedisMetricsRepository implements MetricsRepository
     {
         $queues = (array) $this->connection()->smembers('measured_queues');
 
-        return collect($queues)->map(function ($class) {
-            return preg_match('/queue:(.*)$/', $class, $matches) ? $matches[1] : $class;
-        })->sort()->values()->all();
+        return collect($queues)
+            ->map(fn ($class) => preg_match('/queue:(.*)$/', $class, $matches) ? $matches[1] : $class)
+            ->sort()
+            ->values()
+            ->all();
     }
 
     /**
@@ -75,9 +80,8 @@ class RedisMetricsRepository implements MetricsRepository
      */
     public function throughput()
     {
-        return collect($this->measuredQueues())->reduce(function ($carry, $queue) {
-            return $carry + $this->connection()->hget('queue:'.$queue, 'throughput');
-        }, 0);
+        return collect($this->measuredQueues())
+            ->reduce(fn ($carry, $queue) => $carry + $this->connection()->hget('queue:'.$queue, 'throughput'), 0);
     }
 
     /**
@@ -153,11 +157,13 @@ class RedisMetricsRepository implements MetricsRepository
      */
     public function queueWithMaximumRuntime()
     {
-        return collect($this->measuredQueues())->sortBy(function ($queue) {
-            if ($snapshots = $this->connection()->zrange('snapshot:queue:'.$queue, -1, 1)) {
-                return json_decode($snapshots[0])->runtime;
-            }
-        })->last();
+        return collect($this->measuredQueues())
+            ->sortBy(function ($queue) {
+                if ($snapshots = $this->connection()->zrange('snapshot:queue:'.$queue, -1, 1)) {
+                    return json_decode($snapshots[0])->runtime;
+                }
+            })
+            ->last();
     }
 
     /**
@@ -167,11 +173,13 @@ class RedisMetricsRepository implements MetricsRepository
      */
     public function queueWithMaximumThroughput()
     {
-        return collect($this->measuredQueues())->sortBy(function ($queue) {
-            if ($snapshots = $this->connection()->zrange('snapshot:queue:'.$queue, -1, 1)) {
-                return json_decode($snapshots[0])->throughput;
-            }
-        })->last();
+        return collect($this->measuredQueues())
+            ->sortBy(function ($queue) {
+                if ($snapshots = $this->connection()->zrange('snapshot:queue:'.$queue, -1, 1)) {
+                    return json_decode($snapshots[0])->throughput;
+                }
+            })
+            ->last();
     }
 
     /**
@@ -233,9 +241,9 @@ class RedisMetricsRepository implements MetricsRepository
     protected function snapshotsFor($key)
     {
         return collect($this->connection()->zrange('snapshot:'.$key, 0, -1))
-            ->map(function ($snapshot) {
-                return (object) json_decode($snapshot, true);
-            })->values()->all();
+            ->map(fn ($snapshot) => (object) json_decode($snapshot, true))
+            ->values()
+            ->all();
     }
 
     /**
@@ -317,6 +325,10 @@ class RedisMetricsRepository implements MetricsRepository
             $trans->del($key);
         });
 
+        if (! is_array($responses[0])) {
+            return ['throughput' => null, 'runtime' => null];
+        }
+
         $snapshot = array_values($responses[0]);
 
         return [
@@ -333,7 +345,7 @@ class RedisMetricsRepository implements MetricsRepository
     protected function minutesSinceLastSnapshot()
     {
         $lastSnapshotAt = (int) ($this->connection()->get('last_snapshot_at')
-                                    ?: $this->storeSnapshotTimestamp());
+            ?: $this->storeSnapshotTimestamp());
 
         return max(
             (CarbonImmutable::now()->getTimestamp() - $lastSnapshotAt) / 60, 1
@@ -389,14 +401,63 @@ class RedisMetricsRepository implements MetricsRepository
             $cursor = null;
 
             do {
-                [$cursor, $keys] = $this->connection()->scan(
-                    $cursor ?? 0, ['match' => config('horizon.prefix').$pattern]
+                $scanResult = $this->connection()->scan(
+                    $cursor ?? 0, ['match' => $this->snapshotPatternToMatch($pattern)]
                 );
+
+                if (! is_array($scanResult)) {
+                    break;
+                }
+
+                [$cursor, $keys] = $scanResult;
 
                 foreach ($keys ?? [] as $key) {
                     $this->forget(Str::after($key, config('horizon.prefix')));
                 }
             } while ($cursor > 0);
+        }
+    }
+
+    /**
+     * Get the Redis SCAN match pattern for the given metric pattern.
+     *
+     * @param  string  $pattern
+     * @return string
+     */
+    protected function snapshotPatternToMatch($pattern)
+    {
+        return $this->usesPhpRedisScanPrefix()
+            ? $pattern
+            : config('horizon.prefix').$pattern;
+    }
+
+    /**
+     * Determine if PhpRedis prefixes SCAN patterns itself.
+     *
+     * @return bool
+     */
+    protected function usesPhpRedisScanPrefix()
+    {
+        if (! defined('Redis::OPT_SCAN') || ! defined('Redis::SCAN_PREFIX')) {
+            return false;
+        }
+
+        $connection = $this->connection();
+
+        if (! method_exists($connection, 'client')) {
+            return false;
+        }
+
+        $client = $connection->client();
+
+        if (! is_object($client) || ! method_exists($client, 'getOption')) {
+            return false;
+        }
+
+        try {
+            return (int) $client->getOption(\Redis::OPT_SCAN) === \Redis::SCAN_PREFIX;
+        } catch (Throwable) {
+            return false;
         }
     }
 

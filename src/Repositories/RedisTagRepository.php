@@ -7,6 +7,8 @@ use Laravel\Horizon\Contracts\TagRepository;
 
 class RedisTagRepository implements TagRepository
 {
+    use UsesClusterAwarePipeline;
+
     /**
      * The Redis connection instance.
      *
@@ -77,7 +79,7 @@ class RedisTagRepository implements TagRepository
      */
     public function add($id, array $tags)
     {
-        $this->connection()->pipeline(function ($pipe) use ($id, $tags) {
+        $this->pipeline(function ($pipe) use ($id, $tags) {
             foreach ($tags as $tag) {
                 $pipe->zadd($tag, str_replace(',', '.', microtime(true)), $id);
             }
@@ -94,7 +96,7 @@ class RedisTagRepository implements TagRepository
      */
     public function addTemporary($minutes, $id, array $tags)
     {
-        $this->connection()->pipeline(function ($pipe) use ($minutes, $id, $tags) {
+        $this->pipeline(function ($pipe) use ($minutes, $id, $tags) {
             foreach ($tags as $tag) {
                 $pipe->zadd($tag, str_replace(',', '.', microtime(true)), $id);
 
@@ -139,9 +141,10 @@ class RedisTagRepository implements TagRepository
             $tag, $startingAt, $startingAt + $limit - 1
         );
 
-        return collect($tags)->values()->mapWithKeys(function ($tag, $index) use ($startingAt) {
-            return [$index + $startingAt => $tag];
-        })->all();
+        return collect($tags)
+            ->values()
+            ->mapWithKeys(fn ($tag, $index) => [$index + $startingAt => $tag])
+            ->all();
     }
 
     /**
@@ -153,7 +156,7 @@ class RedisTagRepository implements TagRepository
      */
     public function forgetJobs($tags, $ids)
     {
-        $this->connection()->pipeline(function ($pipe) use ($tags, $ids) {
+        $this->pipeline(function ($pipe) use ($tags, $ids) {
             foreach ((array) $tags as $tag) {
                 foreach ((array) $ids as $id) {
                     $pipe->zrem($tag, $id);
