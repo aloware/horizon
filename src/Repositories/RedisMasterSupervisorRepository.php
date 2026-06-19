@@ -11,6 +11,8 @@ use Laravel\Horizon\MasterSupervisor;
 
 class RedisMasterSupervisorRepository implements MasterSupervisorRepository
 {
+    use UsesClusterAwarePipeline;
+
     /**
      * The Redis connection instance.
      *
@@ -70,23 +72,30 @@ class RedisMasterSupervisorRepository implements MasterSupervisorRepository
      */
     public function get(array $names)
     {
-        $records = $this->connection()->pipeline(function ($pipe) use ($names) {
+        $records = $this->pipeline(function ($pipe) use ($names) {
             foreach ($names as $name) {
                 $pipe->hmget('master:'.$name, ['name', 'pid', 'status', 'supervisors', 'environment']);
             }
         });
 
-        return collect($records)->map(function ($record) {
-            $record = array_values($record);
+        return collect($records)
+            ->map(function ($record) {
+                if (! is_array($record)) {
+                    return null;
+                }
 
-            return ! $record[0] ? null : (object) [
-                'name' => $record[0],
-                'environment' => $record[4],
-                'pid' => $record[1],
-                'status' => $record[2],
-                'supervisors' => json_decode($record[3], true),
-            ];
-        })->filter()->all();
+                $record = array_values($record);
+
+                return ! $record[0] ? null : (object) [
+                    'name' => $record[0],
+                    'environment' => $record[4],
+                    'pid' => $record[1],
+                    'status' => $record[2],
+                    'supervisors' => json_decode($record[3], true),
+                ];
+            })
+            ->filter()
+            ->all();
     }
 
     /**
@@ -99,7 +108,7 @@ class RedisMasterSupervisorRepository implements MasterSupervisorRepository
     {
         $supervisors = $master->supervisors->map->name->all();
 
-        $this->connection()->pipeline(function ($pipe) use ($master, $supervisors) {
+        $this->pipeline(function ($pipe) use ($master, $supervisors) {
             $pipe->hmset(
                 'master:'.$master->name, [
                     'name' => $master->name,

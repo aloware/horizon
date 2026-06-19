@@ -23,12 +23,14 @@ class WorkCommand extends BaseWorkCommand
                             {--memory=128 : The memory limit in megabytes}
                             {--once : Only process the next job on the queue}
                             {--stop-when-empty : Stop when the queue is empty}
+                            {--stop-when-empty-for=0 : Stop when no jobs have been processed for the given number of seconds}
                             {--queue= : The names of the queues to work}
                             {--sleep=3 : Number of seconds to sleep when no job is available}
                             {--rest=0 : Number of seconds to rest between jobs}
                             {--supervisor= : The name of the supervisor the worker belongs to}
                             {--timeout=60 : The number of seconds a child process can run}
-                            {--tries=0 : Number of times to attempt a job before logging it failed}';
+                            {--tries=0 : Number of times to attempt a job before logging it failed}
+                            {--json : Output the queue worker information as JSON}';
 
     /**
      * Indicates whether the command should be shown in the Artisan command list.
